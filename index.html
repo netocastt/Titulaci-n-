@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>StudyZen Pro</title>
+
+<style>
+
+body{
+margin:0;
+font-family:system-ui;
+color:white;
+background:url("fondo.jpg") no-repeat center/cover fixed;
+}
+body::before{
+content:"";
+position:fixed;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+z-index:-1;
+}
+
+/* HEADER */
+header{
+position:relative;
+padding:25px;
+text-align:center;
+font-size:26px;
+font-weight:600;
+letter-spacing:1px;
+border-radius:0 0 25px 25px;
+
+/* IMAGEN */
+background:url("header.jpg") center/cover;
+
+/* EFECTO GLASS */
+backdrop-filter:blur(10px);
+}
+
+/* CAPA OSCURA */
+header::after{
+content:"";
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.4);
+border-radius:0 0 25px 25px;
+}
+
+/* TEXTO ENCIMA */
+header span{
+position:relative;
+z-index:2;
+}
+/* SECCIONES */
+section{
+position:absolute;
+width:100%;
+top:100px;
+
+opacity:0;
+transform:translateX(30px) scale(0.98);
+transition:all 0.4s ease;
+
+pointer-events:none;
+}
+
+section.active{
+opacity:1;
+transform:translateX(0) scale(1);
+pointer-events:auto;
+}
+/* TARJETAS */
+.card{
+background:rgba(255,255,255,0.12);
+backdrop-filter:blur(20px);
+-webkit-backdrop-filter:blur(20px);
+
+border:1px solid rgba(255,255,255,0.2);
+box-shadow:0 8px 30px rgba(0,0,0,0.3);
+
+padding:15px;
+border-radius:20px;
+margin:12px 0;
+
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-3px);
+box-shadow:0 12px 40px rgba(0,0,0,0.4);
+}
+/* BOTONES */
+.btn{
+padding:14px;
+border:none;
+border-radius:16px;
+font-weight:bold;
+margin-top:10px;
+cursor:pointer;
+
+transition:0.2s;
+}
+
+.primary{
+background:linear-gradient(135deg,#a8e6cf,#6ec6ff);
+color:#222;
+}
+
+.secondary{
+background:rgba(255,255,255,0.15);
+color:white;
+}
+
+.btn:hover{
+transform:scale(1.05);
+}
+
+.btn:active{
+transform:scale(0.95);
+}
+.focusRing{
+width:170px;
+height:170px;
+border-radius:50%;
+margin:auto;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:26px;
+font-weight:bold;
+letter-spacing:1px;
+position:relative;
+
+background:conic-gradient(var(--ringColor, #a8e6cf) var(--progress), rgba(255,255,255,0.2) 0);
+
+box-shadow:0 0 25px var(--ringColor, #a8e6cf);
+transition:0.4s;
+}:0.4s;
+
+
+.focusRing{
+font-size:26px;
+font-weight:bold;
+letter-spacing:1px;
+}
+.focusRing span{
+font-size:14px;
+opacity:0.7;
+}
+}
+
+/* 🔊 BORDE VISUALIZADOR */
+.focusRing::before{
+content:"";
+position:absolute;
+width:120%;
+height:120%;
+border-radius:50%;
+border:4px solid var(--ringColor, #a8e6cf);
+filter:blur(6px);
+opacity:0.7;
+transform:scale(1);
+transition:0.1s;
+}
+
+/* TIMER */
+.timer{text-align:center;font-size:50px;}
+
+/* SONIDOS */
+.sound-group{display:flex;gap:10px;}
+.sound{flex:1;background:rgba(255,255,255,0.2);}
+.activeSound{background:#a8e6cf;color:#333;}
+
+/* NAV */
+nav{
+position:fixed;
+bottom:15px;
+left:50%;
+transform:translateX(-50%);
+width:90%;
+
+display:flex;
+justify-content:space-around;
+
+background:rgba(255,255,255,0.15);
+backdrop-filter:blur(20px);
+
+border-radius:25px;
+padding:12px;
+
+box-shadow:0 10px 30px rgba(0,0,0,0.4);
+}
+
+nav button{
+font-size:20px;
+opacity:0.7;
+transition:0.3s;
+}
+
+nav button:hover{
+opacity:1;
+transform:scale(1.2);
+}
+/* INPUT */
+input,select{
+width:100%;padding:10px;margin-top:5px;
+border-radius:10px;border:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<header><span>StudyZen</span></header>
+
+<!-- HOME -->
+<section id="home" class="active">
+<h2></h2>
+<p id="mensaje">Sesiones restantes:0</p>
+
+<div class="focusRing" id="ring">0%</div>
+
+<button class="btn primary" onclick="show('focus')">
+▶ Iniciar sesión
+</button>
+</section>
+
+<!-- PLANIFICADOR -->
+<section id="plan">
+<h2>📅 Planificador</h2>
+
+<div class="card">
+<input id="materia" placeholder="Materia">
+<input id="fecha" type="date">
+<select id="dificultad">
+<option>Relajada</option>
+<option>Difícil</option>
+</select>
+<button class="btn primary" onclick="agregarTarea()">Agregar</button>
+</div>
+
+<div id="lista"></div>
+</section>
+
+<!-- ENFOQUE -->
+<section id="focus">
+<h2>⏱️ Modo Enfoque</h2>
+
+<div class="timer" id="timer">50:00</div>
+
+<div class="card">
+<button class="btn primary" onclick="start()">▶ Iniciar</button>
+<button class="btn secondary" onclick="reset()">⏹ Reset</button>
+
+<div class="sound-group">
+<button class="btn sound" onclick="activar(this)">🌧️</button>
+<button class="btn sound" onclick="activar(this)">☕</button>
+
+</div>
+</div>
+</section>
+
+
+<!-- STATS -->
+<section id="stats">
+<h2>📊 Estadísticas</h2>
+
+<div class="card">
+<p>Sesiones completadas: <span id="sesiones">0</span></p>
+<p>Racha: <span id="racha">0</span> días</p>
+</div>
+
+</section>
+
+<!-- NAV -->
+<nav>
+<button onclick="show('home')">🏠</button>
+<button onclick="show('plan')">📅</button>
+<button onclick="show('focus')">⏱️</button>
+
+<button onclick="show('stats')">📊</button>
+</nav>
+
+<script>
+
+/* NAVEGACIÓN */
+function show(id){
+
+let current = document.querySelector("section.active")
+let next = document.getElementById(id)
+
+if(current === next) return
+
+// animación salida
+current.style.transform = "translateX(-30px) scale(0.98)"
+current.style.opacity = "0"
+
+// esperar animación
+setTimeout(()=>{
+current.classList.remove("active")
+
+next.classList.add("active")
+
+// reset entrada
+next.style.transform = "translateX(30px) scale(0.98)"
+next.style.opacity = "0"
+
+setTimeout(()=>{
+next.style.transform = "translateX(0) scale(1)"
+next.style.opacity = "1"
+},50)
+
+},200)
+}
+/* PLANIFICADOR */
+let tareas=[]
+
+function agregarTarea(){
+let m=document.getElementById("materia").value
+let f=document.getElementById("fecha").value
+let d=document.getElementById("dificultad").value
+
+if(!m||!f)return
+
+let bloques = d=="Difícil"?5:3
+
+tareas.push({m,f,d,bloques})
+render()
+}
+
+function render(){
+let html=""
+tareas.forEach(t=>{
+html+=`
+<div class="card">
+<b>${t.m}</b><br>
+${t.f}<br>
+${t.bloques} sesiones sugeridas
+</div>`
+})
+document.getElementById("lista").innerHTML=html
+document.getElementById("mensaje").innerText="Hoy tienes "+tareas.length+" sesiones"
+}
+
+/* TIMER */
+let tiempo=3000
+let intervalo
+let sesiones=0
+
+function start(){
+clearInterval(intervalo)
+intervalo=setInterval(()=>{
+if(tiempo<=0){
+clearInterval(intervalo)
+sesiones++
+document.getElementById("sesiones").innerText=sesiones
+alert("Descansa 10 min ☕")
+tiempo=600
+start()
+}
+tiempo--
+actualizarTimer()
+},1000)
+}
+
+function actualizarTimer(){
+let m=Math.floor(tiempo/60)
+let s=tiempo%60
+
+document.getElementById("timer").innerText=
+(m<10?"0":"")+m+":"+(s<10?"0":"")+s
+
+let progreso = ((3000-tiempo)/3000)*100
+document.getElementById("ring").style.setProperty("--progress",progreso+"%")
+document.getElementById("ring").innerText=Math.floor(progreso)+"%"
+}
+
+function reset(){
+tiempo=3000
+actualizarTimer()
+}
+// 🎧 VISUALIZADOR REAL
+let audioContext = new (window.AudioContext || window.webkitAudioContext)()
+let analyser = audioContext.createAnalyser()
+analyser.fftSize = 64
+
+let dataArray = new Uint8Array(analyser.frequencyBinCount)
+let sourceActual = null
+
+function conectarAudio(audio){
+
+if(sourceActual){
+sourceActual.disconnect()
+}
+
+let source = audioContext.createMediaElementSource(audio)
+source.connect(analyser)
+analyser.connect(audioContext.destination)
+
+sourceActual = source
+
+visualizar()
+}
+
+function visualizar(){
+
+requestAnimationFrame(visualizar)
+
+analyser.getByteFrequencyData(dataArray)
+
+// volumen promedio
+let volumen = dataArray.reduce((a,b)=>a+b) / dataArray.length
+
+let ring = document.getElementById("ring")
+
+// ESCALA PRINCIPAL
+let escala = 1 + (volumen / 400)
+ring.style.transform = `scale(${escala})`
+
+// BORDE DINÁMICO
+let borde = 1 + (volumen / 200)
+ring.style.setProperty("--bordeEscala", borde)
+
+ring.style.boxShadow = `0 0 ${20 + volumen/5}px var(--ringColor)`
+}
+function activar(btn){
+
+let rain = document.getElementById("rainAudio")
+let cafe = document.getElementById("cafeAudio")
+let ring = document.getElementById("ring")
+
+document.querySelectorAll(".sound").forEach(b=>{
+b.classList.remove("activeSound")
+})
+
+btn.classList.add("activeSound")
+
+rain.pause()
+cafe.pause()
+rain.currentTime = 0
+cafe.currentTime = 0
+
+if(btn.innerText.includes("🌧️")){
+rain.play().catch(()=>{})
+conectarAudio(rain)
+ring.style.setProperty("--ringColor","#6ec6ff")
+}
+
+if(btn.innerText.includes("☕")){
+cafe.play().catch(()=>{})
+conectarAudio(cafe)
+ring.style.setProperty("--ringColor","#c69c6d")
+}
+}
+/* BOTÓN DE PRUEBA */
+function testAudio(){
+let rain = document.getElementById("rainAudio")
+rain.play()
+}
+
+/* ZEN */
+function respirar(){
+let txt=document.getElementById("respiraTexto")
+let pasos=["Inhala...","Sostén...","Exhala..."]
+let i=0
+
+let inter=setInterval(()=>{
+txt.innerText=pasos[i]
+i++
+if(i>2)clearInterval(inter)
+},1500)
+}
+
+</script>
+
+<audio id="rainAudio" loop>
+<source src="lluvia.mp3" type="audio/mp3">
+</audio>
+
+<audio id="cafeAudio" loop>
+<source src="cafe.mp3" type="audio/mp3">
+</audio>
+
+</body>
+</html>
